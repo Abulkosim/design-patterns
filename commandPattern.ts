@@ -96,6 +96,32 @@ class InsertTextCommand implements Command {
   }
 }
 
+class DeleteTextCommand implements Command {
+  private previousContent: string = "";
+
+  constructor(
+    private editor: TextEditor,
+    private charsToDelete: number
+  ) { }
+
+  public execute(): void {
+    this.previousContent = this.editor.getContent();
+
+    const currentContent = this.editor.getContent();
+
+    if (currentContent.length <= this.charsToDelete) {
+      this.editor.setContent('');
+    } else {
+      const updatedContent = currentContent.slice(0, currentContent.length - this.charsToDelete)
+      this.editor.setContent(updatedContent)
+    }
+  }
+
+  public undo(): void {
+    this.editor.setContent(this.previousContent)
+  }
+}
+
 class Invoker {
   private history: Command[] = []
   private undone: Command[] = []
@@ -107,17 +133,17 @@ class Invoker {
   }
 
   public undo(): void {
-    const command = this.history.pop(); 
+    const command = this.history.pop();
     if (command) {
-      command.undo(); 
-      this.undone.push(command); 
+      command.undo();
+      this.undone.push(command);
     }
   }
 
   public redo(): void {
-    const command = this.undone.pop(); 
+    const command = this.undone.pop();
     if (command) {
-      command.execute(); 
+      command.execute();
       this.history.push(command)
     }
   }
